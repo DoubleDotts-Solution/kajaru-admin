@@ -9,7 +9,7 @@ module.exports = {
       black: "#344054",
       darkBlack: "#101828",
       primary: "#6941C6",
-      lightPurple: "#F9F5FF",
+      lightPurple: "#F8F6FF",
       darkPurple: "#F2E9FF",
       black2: "#1D2939",
       gray: "#667085",
@@ -25,6 +25,7 @@ module.exports = {
       red: "red",
       purple: "#643FBC",
       gray: "#D0D5DD",
+      gray2: "#EAECF0",
     },
     boxShadow: {
       shadow1: "0px 2px 4px -2px #1018280F, 0px 4px 8px -2px #1018281A",
