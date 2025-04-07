@@ -19,7 +19,9 @@ module.exports = {
       white: "#fff",
       gray2: "#D0D5DD",
       gray3: "#F9F9FB",
+      gray4: "#98A2B3",
       red: "red",
+      darkParrot: "#12B76A",
     },
     borderColor: {
       red: "red",
@@ -29,6 +31,8 @@ module.exports = {
     },
     boxShadow: {
       shadow1: "0px 2px 4px -2px #1018280F, 0px 4px 8px -2px #1018281A",
+      shadow2: "0px 1px 2px 0px #1018280D",
+      shadow3: "0px 1px 2px 0px #1018280F, 0px 1px 3px 0px #1018281A",
     },
     screens: {
       sm: "576px",

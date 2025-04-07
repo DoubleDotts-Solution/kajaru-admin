@@ -16,11 +16,19 @@ export const Layout = () => {
       <ScrollToTop />
       <main className="">
         <Suspense fallback={<Spinner />}>
-          <div className="flex w-full">
+          <div className="hidden lg:flex w-full">
             <div className="w-1/5 h-screen fixed">
               <Sidebar />
             </div>
             <div className="w-4/5 ml-auto min-h-screen">
+              <Outlet />
+            </div>
+          </div>
+          <div className="block lg:hidden w-full">
+            <div className="">
+              <Sidebar />
+            </div>
+            <div className="">
               <Outlet />
             </div>
           </div>
