@@ -1,7 +1,10 @@
 import DateRangePicker from "../../../components/ui/daterangepicker";
 import Button from "../../../components/common/button";
-import { ArrowUp, Plus } from "lucide-react";
-import { useGetConsignmentApiQuery } from "../../../store/slice/apiSlice/consignment";
+import { ArrowUp, Check, Plus } from "lucide-react";
+import {
+  useGetConsignmentApiQuery,
+  useUpdateConsignmentStatusApiMutation,
+} from "../../../store/slice/apiSlice/consignment";
 import { Loader2, Pencil, Trash } from "lucide-react";
 import {
   Table,
@@ -19,20 +22,43 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Ic_search from "../../../assets/images/Ic_search.svg";
 import Ic_filter from "../../../assets/images/Ic_filter.svg";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "../../../components/common/modal";
 import { formatDateToYYYYMMDD, formatTimestamp } from "../../../lib/utils";
+import toast from "react-hot-toast";
+import Drawer from "../../../components/ui/drawer";
+import { ConsignmentForm } from "./consignmentForm";
 
 export const Consignment = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [status, setStatus] = useState<string>("unsent");
+  const [selectedRows, setSelectedRows] = useState<any>({
+    sent: [],
+    unsent: [],
+  });
 
   const handleDateChange = (start: Date | null, end: Date | null) => {
     setStartDate(start);
     setEndDate(end);
+  };
+  const handleRowSelection = (rowData: any, isChecked: boolean) => {
+    setSelectedRows((prevSelected: any) => {
+      const updatedStatus = rowData.status;
+      const current = prevSelected[updatedStatus] || [];
+
+      return {
+        ...prevSelected,
+        [updatedStatus]: isChecked
+          ? [...current, rowData]
+          : current.filter((item: any) => item.id !== rowData.id),
+      };
+    });
   };
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,10 +74,10 @@ export const Consignment = () => {
         start_date: formatDateToYYYYMMDD(startDate),
         end_date: formatDateToYYYYMMDD(endDate),
       }),
-    // status:""
+    ...(status && { status: status }),
   };
 
-  const { data, isLoading } = useGetConsignmentApiQuery(params);
+  const { data, isLoading, refetch } = useGetConsignmentApiQuery(params);
   const consignmentData = (data as any) || {
     data: [],
     pagination: {
@@ -66,7 +92,6 @@ export const Consignment = () => {
 
   const consignment = consignmentData?.data;
 
-  const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedId, setSelectedId] = useState<any>(null);
 
@@ -89,6 +114,78 @@ export const Consignment = () => {
 
   const columns = useMemo<ColumnDef<any>[]>(
     () => [
+      {
+        id: "select",
+        header: ({ table }: any) => {
+          const allSelected = table
+            .getRowModel()
+            .rows.every((row: any) =>
+              selectedRows[row.original.status]?.some(
+                (r: any) => r.id === row.original.id
+              )
+            );
+
+          return (
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                const updatedSelectedRows = { ...selectedRows };
+
+                table.getRowModel().rows.forEach((row: any) => {
+                  const status = row.original.status;
+                  const currentRows = updatedSelectedRows[status] || [];
+
+                  if (checked) {
+                    const exists = currentRows.some(
+                      (r: any) => r.id === row.original.id
+                    );
+                    if (!exists) {
+                      updatedSelectedRows[status] = [
+                        ...currentRows,
+                        row.original,
+                      ];
+                    }
+                  } else {
+                    updatedSelectedRows[status] = currentRows.filter(
+                      (r: any) => r.id !== row.original.id
+                    );
+                  }
+                });
+
+                setSelectedRows(updatedSelectedRows);
+              }}
+              className="w-4 h-4 appearance-none border-2 border-gray rounded-sm
+                checked:bg-primary checked:border-purple
+                relative
+                checked:after:content-['✓'] after:text-white after:text-am after:font-bold
+                after:absolute after:top-0 after:left-0 after:w-full after:h-full
+                after:flex after:items-center after:justify-center"
+            />
+          );
+        },
+        cell: ({ row }: any) => {
+          const isSelected = selectedRows[row.original.status]?.some(
+            (r: any) => r.id === row.original.id
+          );
+          return (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={(e) => {
+                handleRowSelection(row.original, e.target.checked);
+              }}
+              className="w-4 h-4 appearance-none border-2 border-gray rounded-sm
+            checked:bg-primary checked:border-purple
+            relative
+            checked:after:content-['✓'] after:text-white after:text-am after:font-bold
+            after:absolute after:top-0 after:left-0 after:w-full after:h-full
+            after:flex after:items-center after:justify-center"
+            />
+          );
+        },
+      },
       {
         accessorKey: "Consignment No.",
         header: "Consignment No.",
@@ -141,7 +238,15 @@ export const Consignment = () => {
         header: "Status",
         cell: ({ row }: any) => (
           <div>
-            <p className="text-black text-sm mb-[2px]">{row.original.status}</p>
+            {row.original.status === "sent" ? (
+              <p className="text-sm bg-lightRed text-darkRed py-[2px] px-[10px] font-medium rounded-[16px] w-max">
+                Sent
+              </p>
+            ) : (
+              <p className="text-sm bg-lightGreen text-darkGreen py-[2px] px-[10px] font-medium rounded-[16px] w-max">
+                Unsent
+              </p>
+            )}
           </div>
         ),
       },
@@ -167,7 +272,7 @@ export const Consignment = () => {
         ),
       },
     ],
-    [navigate]
+    [navigate, selectedRows]
   );
   const pagination = consignmentData?.pagination;
 
@@ -196,6 +301,39 @@ export const Consignment = () => {
     },
   });
 
+  const [updateStatus] = useUpdateConsignmentStatusApiMutation();
+  const handleUpdateStatus = async (ids: string, status: string) => {
+    try {
+      const payload = {
+        consignment_id: ids,
+        status: status,
+      };
+
+      const response: any = await updateStatus(payload).unwrap();
+      toast.success(response.message, { position: "top-right" });
+      refetch();
+    } catch (error: any) {
+      toast.success(error.message, { position: "top-right" });
+    }
+  };
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.has("add-consignment")) {
+      setDrawerOpen(true);
+    } else {
+      setDrawerOpen(false);
+    }
+  }, [location.search]);
+
+  const openDrawer = () => {
+    setDrawerOpen(true);
+    navigate("?add-consignment");
+  };
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    navigate("/consignment");
+  };
   return (
     <>
       <div className="py-8 px-6">
@@ -213,6 +351,7 @@ export const Consignment = () => {
               text={"Create Consignment"}
               className={`bg-purple shadow-shadow2 text-white`}
               icon={<Plus className="text-white w-5 h-5" />}
+              onClick={openDrawer}
             />
           </div>
         </div>
@@ -270,28 +409,88 @@ export const Consignment = () => {
           </div>
         </div>
 
-        <div className="mb-2 flex items-center justify-between bg-lightPurple rounded-[12px] py-3 px-4">
-          <div className=""></div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center border border-gray1 shadow-shadow1 bg-[#fff] gap-2 rounded-lg py-[10px] px-[14px]">
-              <img src={Ic_search} alt="search" />
-              <input
-                type="text"
-                placeholder="Søk"
-                className="focus-within:outline-none"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+        <div className="rounded-lg border border-gray2 shadow-shadow1 overflow-hidden">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex border border-gray rounded-lg h-[40px] overflow-hidden">
+              <div
+                className={`px-4 flex items-center h-full justify-center border-r border-gray cursor-pointer ${
+                  status === "unsent" ? "text-purple bg-gray5" : "text-black"
+                }`}
+                onClick={() => {
+                  setStatus("unsent");
+                  refetch();
+                }}
+              >
+                Unsent
+              </div>
+              <div
+                className={`px-4 flex items-center h-full justify-center cursor-pointer ${
+                  status === "sent" ? "text-purple bg-gray5" : "text-black"
+                }`}
+                onClick={() => {
+                  setStatus("sent");
+                  refetch();
+                }}
+              >
+                Sent
+              </div>
             </div>
-            <div className="flex gap-3 items-center">
-              <div className="border border-gray1 rounded-[8px] flex gap-2 items-center py-[10px] px-4 cursor-pointer shadow-shadow1 h-[40px] bg-[#fff]">
-                <img src={Ic_filter} alt="" />
-                <span className="text-black font-medium text-sm">Filter</span>
+            <div className="flex items-center gap-4">
+              {selectedRows &&
+                ((selectedRows.sent.length > 0 && status === "sent") ||
+                (selectedRows.unsent.length > 0 && status === "unsent") ? (
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="border border-gray rounded-lg flex items-center gap-2 py-[10px] px-4 h-[40px] cursor-pointer"
+                      onClick={() => {
+                        const isSent = status === "sent";
+                        const rows = isSent
+                          ? selectedRows.sent
+                          : selectedRows.unsent;
+                        const idsString = rows
+                          .map((item: any) => item.id)
+                          .join(",");
+                        handleUpdateStatus(
+                          idsString,
+                          isSent ? "unsent" : "sent"
+                        );
+                      }}
+                    >
+                      <Check
+                        className={`h-5 w-5 ${
+                          status === "sent" ? "text-red" : "text-darkParrot"
+                        }`}
+                      />
+                      <span className="text-black text-sm font-medium">
+                        {status === "sent"
+                          ? "Mark as a Unsent"
+                          : "Mark as a Sent"}
+                      </span>
+                    </div>
+                    <div className="border-l border-gray2 h-[20px]"></div>
+                  </div>
+                ) : null)}
+
+              <div className="flex items-center border border-gray shadow-shadow2 bg-[#fff] gap-2 rounded-lg py-[10px] px-[14px] h-[40px]">
+                <img src={Ic_search} alt="search" />
+                <input
+                  type="text"
+                  placeholder="Search"
+                  className="focus-within:outline-none"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-3 items-center">
+                <div className="border border-gray rounded-[8px] flex gap-2 items-center py-[10px] px-4 cursor-pointer shadow-shadow2 h-[40px] bg-[#fff]">
+                  <img src={Ic_filter} alt="" />
+                  <span className="text-black font-medium text-sm">
+                    filters
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="rounded-lg border border-gray2 shadow-shadow2 overflow-hidden">
           <Table>
             <TableHeader>
               {table?.getHeaderGroups().map((headerGroup: any) => (
@@ -351,7 +550,7 @@ export const Consignment = () => {
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-[14px] py-2 rounded-lg disabled:opacity-50 shadow-shadow1 border border-gray1 text-black font-semibold text-sm"
+              className="px-[14px] py-2 rounded-lg disabled:opacity-50 shadow-shadow1 border border-gray text-black font-semibold text-sm"
             >
               Forrige
             </button>
@@ -366,7 +565,7 @@ export const Consignment = () => {
                 )
               }
               disabled={currentPage === pagination?.totalPages}
-              className="px-[14px] py-2 rounded-lg disabled:opacity-50 shadow-shadow1 border border-gray1 text-black font-semibold text-sm"
+              className="px-[14px] py-2 rounded-lg disabled:opacity-50 shadow-shadow1 border border-gray text-black font-semibold text-sm"
             >
               Neste
             </button>
@@ -400,6 +599,12 @@ export const Consignment = () => {
               </div>
             </div>
           </Modal>
+        )}
+
+        {isDrawerOpen && (
+          <Drawer onClose={closeDrawer}>
+            <ConsignmentForm refetch={refetch} />
+          </Drawer>
         )}
       </div>
     </>
