@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { mainApi } from "../mainApiSlice";
 
-interface BlogFilterApiParams {
+interface filterApiParams {
   page?: number;
   limit?: number;
   value?: string;
@@ -12,14 +12,24 @@ interface BlogFilterApiParams {
 
 const consignmentApi = mainApi.injectEndpoints({
   endpoints: (builder) => ({
-    getConsignmentApi: builder.query<unknown, BlogFilterApiParams>({
-      query: (data: BlogFilterApiParams) => ({
+    getConsignmentApi: builder.query<unknown, filterApiParams>({
+      query: (data: filterApiParams) => ({
         url: `consignment`,
         method: "POST",
+        body: data,
+      }),
+    }),
+    updateConsignmentStatusApi: builder.mutation<unknown, any>({
+      query: (data: any) => ({
+        url: `consignment/update-status`,
+        method: "PATCH",
         body: data,
       }),
     }),
   }),
 });
 
-export const { useGetConsignmentApiQuery } = consignmentApi;
+export const {
+  useGetConsignmentApiQuery,
+  useUpdateConsignmentStatusApiMutation,
+} = consignmentApi;
