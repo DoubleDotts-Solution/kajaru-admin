@@ -13,6 +13,8 @@ import { Input } from "../../../components/ui/input";
 import { z } from "zod";
 import toast from "react-hot-toast";
 import { useRef } from "react";
+import { useAddConsignmentApiMutation } from "../../../store/slice/apiSlice/consignment";
+import { useLocation } from "react-router-dom";
 
 const formSchema = z.object({
   consignment_number: z.string().min(2, {
@@ -34,10 +36,21 @@ const formSchema = z.object({
   ]),
 });
 
-export const ConsignmentForm = ({ refetch }: { refetch: any }) => {
+export const ConsignmentForm = ({
+  refetch,
+  closeDrawer,
+}: {
+  refetch: any;
+  closeDrawer: any;
+}) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   });
+  const location = useLocation();
+
+  const searchParams = new URLSearchParams(location.search);
+  const id = searchParams.get("edit-consignment");
+  console.log(id);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -64,15 +77,27 @@ export const ConsignmentForm = ({ refetch }: { refetch: any }) => {
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
   };
+  const [addConsignment] = useAddConsignmentApiMutation();
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
-      console.log(data);
-    } catch (error) {
-      console.error("Firestore operation failed:", error);
-      toast.error("Something went wrong. Please try again.", {
-        position: "top-right",
+      const formData = new FormData();
+
+      Object.entries(data).forEach(([key, value]) => {
+        if (value instanceof FileList) {
+          Array.from(value).forEach((file) => {
+            formData.append(key, file);
+          });
+        } else if (value !== undefined && value !== null) {
+          formData.append(key, value as any);
+        }
       });
+      const response: any = await addConsignment(formData).unwrap();
+      toast.success(response.message, { position: "top-right" });
+      refetch();
+      closeDrawer();
+    } catch (error: any) {
+      toast.error(error.data.message, { position: "top-right" });
     }
   };
   return (

@@ -2,6 +2,7 @@ import DateRangePicker from "../../../components/ui/daterangepicker";
 import Button from "../../../components/common/button";
 import { ArrowUp, Check, Plus } from "lucide-react";
 import {
+  useDeleteConsignmentApiMutation,
   useGetConsignmentApiQuery,
   useUpdateConsignmentStatusApiMutation,
 } from "../../../store/slice/apiSlice/consignment";
@@ -24,6 +25,7 @@ import {
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
 import Ic_search from "../../../assets/images/Ic_search.svg";
+import Ic_excel from "../../../assets/images/Ic_excel.svg";
 import Ic_filter from "../../../assets/images/Ic_filter.svg";
 import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "../../../components/common/modal";
@@ -83,10 +85,13 @@ export const Consignment = () => {
     pagination: {
       totalPages: 1,
       currentPage: 1,
-      limit: 0,
+      limit: 10,
       sentCount: 0,
       totalCount: 0,
       unsentCount: 0,
+      lastMonthSentPercentage: 0,
+      lastMonthTotalPercentage: 0,
+      lastMonthUnsentPercentage: 0,
     },
   };
 
@@ -95,8 +100,18 @@ export const Consignment = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedId, setSelectedId] = useState<any>(null);
 
+  const [deleteConsignment] = useDeleteConsignmentApiMutation();
+
   const handleDelete = async (id: string) => {
-    console.log(id);
+    try {
+      const response: any = await deleteConsignment(id).unwrap();
+      toast.success(response.message, { position: "top-right" });
+      setShowConfirm(false);
+      refetch();
+    } catch (error: any) {
+      toast.error(error.data.message, { position: "top-right" });
+      setShowConfirm(false);
+    }
   };
 
   const handleConfirmPopup = () => {
@@ -111,6 +126,7 @@ export const Consignment = () => {
     setSelectedId(id);
     setShowConfirm(true);
   };
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
 
   const columns = useMemo<ColumnDef<any>[]>(
     () => [
@@ -226,25 +242,29 @@ export const Consignment = () => {
       {
         accessorKey: "Consignment Exls",
         header: "Consignment Exls",
-        cell: ({ row }: any) => (
-          <p className="text-sm font-semibold text-black">
-            {/* {row.original.updatedAt} */}
-            abc
-          </p>
-        ),
+        cell: ({ row }: any) => {
+          return (
+            <div className="flex items-center gap-2 w-max">
+              <img src={Ic_excel} alt="excel_icon" />
+              <p className="text-sm font-medium text-darkBlack">
+                Consignment.exls
+              </p>
+            </div>
+          );
+        },
       },
       {
         accessorKey: "Status",
         header: "Status",
         cell: ({ row }: any) => (
           <div>
-            {row.original.status === "sent" ? (
+            {row.original.status === "unsent" ? (
               <p className="text-sm bg-lightRed text-darkRed py-[2px] px-[10px] font-medium rounded-[16px] w-max">
-                Sent
+                Unsent
               </p>
             ) : (
               <p className="text-sm bg-lightGreen text-darkGreen py-[2px] px-[10px] font-medium rounded-[16px] w-max">
-                Unsent
+                Sent
               </p>
             )}
           </div>
@@ -258,9 +278,10 @@ export const Consignment = () => {
             <div className="flex items-center justify-center gap-3">
               <Pencil
                 className="h-5 w-5 text-primary cursor-pointer"
-                onClick={() =>
-                  navigate(`/edit-til-leverandor/${row.original.id}`)
-                }
+                onClick={() => {
+                  navigate(`?edit-consignment=${row.original.id}`);
+                  setDrawerOpen(true);
+                }}
               />
 
               <Trash
@@ -313,13 +334,12 @@ export const Consignment = () => {
       toast.success(response.message, { position: "top-right" });
       refetch();
     } catch (error: any) {
-      toast.success(error.message, { position: "top-right" });
+      toast.error(error.data.message, { position: "top-right" });
     }
   };
-  const [isDrawerOpen, setDrawerOpen] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.has("add-consignment")) {
+    if (params.has("add-consignment") || params.has("edit-consignment")) {
       setDrawerOpen(true);
     } else {
       setDrawerOpen(false);
@@ -368,7 +388,10 @@ export const Consignment = () => {
               <div className="bg-lightGreen rounded-[16px] flex items-center gap-1 py-[2px] px-2 h-6">
                 <ArrowUp className="w-3 h-3 text-darkParrot" />
                 <p className="text-darkGreen text-xs font-medium">
-                  <span className="text-sm">10%</span> From Last month
+                  <span className="text-sm">
+                    {pagination?.lastMonthTotalPercentage}%
+                  </span>{" "}
+                  From Last month
                 </p>
               </div>
             </div>
@@ -384,7 +407,10 @@ export const Consignment = () => {
               <div className="bg-lightGreen rounded-[16px] flex items-center gap-1 py-[2px] px-2 h-6">
                 <ArrowUp className="w-3 h-3 text-darkParrot" />
                 <p className="text-darkGreen text-xs font-medium">
-                  <span className="text-sm">10%</span> From Last month
+                  <span className="text-sm">
+                    {pagination?.lastMonthSentPercentage}%
+                  </span>{" "}
+                  From Last month
                 </p>
               </div>
             </div>
@@ -402,7 +428,10 @@ export const Consignment = () => {
               <div className="bg-lightGreen rounded-[16px] flex items-center gap-1 py-[2px] px-2 h-6">
                 <ArrowUp className="w-3 h-3 text-darkParrot" />
                 <p className="text-darkGreen text-xs font-medium">
-                  <span className="text-sm">10%</span> From Last month
+                  <span className="text-sm">
+                    {pagination?.lastMonthUnsentPercentage}%
+                  </span>{" "}
+                  From Last month
                 </p>
               </div>
             </div>
@@ -577,7 +606,7 @@ export const Consignment = () => {
             <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
               <div className="bg-white p-6 rounded-lg shadow-lg">
                 <p className="text-lg font-bold">
-                  Er du sikker på at du vil slette?
+                  Are you sure you want to delete?
                 </p>
                 <div className="flex justify-center mt-5 w-full gap-5 items-center">
                   <div
@@ -585,13 +614,13 @@ export const Consignment = () => {
                     className="w-1/2 sm:w-auto"
                   >
                     <Button
-                      text="Avbryt"
+                      text="Cancel"
                       className="border border-gray2 text-black text-sm rounded-[8px] h-[40px] font-medium relative px-4 py-[10px] flex items-center gap-2"
                     />
                   </div>
                   <div onClick={() => handleDelete(selectedId)}>
                     <Button
-                      text="Bekrefte"
+                      text="Confirm"
                       className="border border-purple bg-purple text-white text-sm rounded-[8px] h-[40px] font-medium relative px-4 py-[10px] flex items-center gap-2"
                     />
                   </div>
@@ -603,7 +632,7 @@ export const Consignment = () => {
 
         {isDrawerOpen && (
           <Drawer onClose={closeDrawer}>
-            <ConsignmentForm refetch={refetch} />
+            <ConsignmentForm refetch={refetch} closeDrawer={closeDrawer} />
           </Drawer>
         )}
       </div>
