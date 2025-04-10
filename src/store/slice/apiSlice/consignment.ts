@@ -39,6 +39,19 @@ const consignmentApi = mainApi.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    getSingleConsignmentApi: builder.mutation<unknown, any>({
+      query: (id: any) => ({
+        url: `consignment/find/${id}`,
+        method: "GET",
+      }),
+    }),
+    updateConsignmentApi: builder.mutation<unknown, { id: number; data: any }>({
+      query: ({ id, data }) => ({
+        url: `consignment/update/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -47,4 +60,6 @@ export const {
   useUpdateConsignmentStatusApiMutation,
   useAddConsignmentApiMutation,
   useDeleteConsignmentApiMutation,
+  useGetSingleConsignmentApiMutation,
+  useUpdateConsignmentApiMutation,
 } = consignmentApi;

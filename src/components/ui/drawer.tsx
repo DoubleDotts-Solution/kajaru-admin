@@ -33,8 +33,8 @@ const Drawer = ({
           ${isVisible ? "translate-x-0" : "translate-x-full"}
         `}
       >
-        <div className="absolute top-6 right-6">
-          <button onClick={handleClose} className="h-8">
+        <div className="absolute top-4 lg:top-6 right-4 lg:right-6">
+          <button onClick={handleClose} className="lg:h-8">
             <X className="w-6 h-6 text-primary" />
           </button>
         </div>

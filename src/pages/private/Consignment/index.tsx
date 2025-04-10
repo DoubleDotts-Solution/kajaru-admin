@@ -208,7 +208,7 @@ export const Consignment = () => {
         cell: ({ row }: any) => {
           return (
             <>
-              <div className="text-purple text-sm font-semibold">
+              <div className="text-purple text-sm font-semibold w-max">
                 {row.original.consignment_number}
               </div>
             </>
@@ -219,7 +219,7 @@ export const Consignment = () => {
         accessorKey: "Created On",
         header: "Created On",
         cell: ({ row }: any) => (
-          <p className="font-semibold text-sm text-darkBlack">
+          <p className="font-semibold text-sm text-darkBlack w-max">
             {formatTimestamp(row.original.updatedAt)}
           </p>
         ),
@@ -228,16 +228,42 @@ export const Consignment = () => {
         accessorKey: "No. of Box",
         header: "No. of Box",
         cell: ({ row }: any) => (
-          <p className="text-sm text-darkBlack">{row.original.number_of_box}</p>
+          <p className="text-sm text-darkBlack w-max">
+            {row.original.number_of_box}
+          </p>
         ),
       },
       {
         accessorKey: "Tags",
         header: "Tags",
-        cell: ({ row }: any) => (
-          <p className="text-sm text-darkBlack">{row.original.tags}</p>
-          // <p className="text-sm text-darkBlack">6</p>
-        ),
+        cell: ({ row }: any) => {
+          const rawTags = row.original.tags;
+          const tagsArray = rawTags
+            .split(",")
+            .map((tag: string) => tag.trim().replace(/^'+|'+$/g, ""));
+
+          const visibleTags = tagsArray.slice(0, 2);
+          const extraCount = tagsArray.length - visibleTags.length;
+
+          return (
+            <div className="flex flex-wrap gap-2 w-max">
+              {visibleTags.map((tag: string, idx: number) => (
+                <span
+                  key={idx}
+                  className="bg-gray6 text-sm text-black3 px-2 py-0.5 rounded-full"
+                >
+                  #{tag}
+                </span>
+              ))}
+
+              {extraCount > 0 && (
+                <span className="bg-gray6 text-sm text-black3 px-2 py-0.5 rounded-full">
+                  +{extraCount}
+                </span>
+              )}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "Consignment Exls",
@@ -356,12 +382,12 @@ export const Consignment = () => {
   };
   return (
     <>
-      <div className="py-8 px-6">
-        <div className="flex items-center justify-between gap-3 mb-8">
-          <h2 className="text-darkBlack text-[32px] font-medium">
+      <div className="py-6 md:py-8 px-4 md:px-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 md:mb-8">
+          <h2 className="text-darkBlack text-xl md:text-2xl lg:text-[28px] desktop:text-[32px] font-medium">
             Consignment
           </h2>
-          <div className="flex gap-4 h-[40px] items-center">
+          <div className="flex flex-col sm:flex-row gap-4 md:h-[40px] md:items-center">
             <DateRangePicker
               startDate={startDate}
               endDate={endDate}
@@ -376,13 +402,13 @@ export const Consignment = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-6 mb-6">
-          <div className="shadow-shadow3 border border-gray2 rounded-lg p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 lg:gap-6 mb-4 md:mb-6">
+          <div className="shadow-shadow3 border border-gray2 rounded-lg p-4 md:p-5 lg:p-6">
             <div className="flex items-center gap-2 justify-between mb-2">
               <p className="text-gray text-sm font-medium">Total Consignment</p>
             </div>
             <div className="gap-4 flex items-center justify-between">
-              <h3 className="text-darkBlack text-[30px] font-semibold">
+              <h3 className="text-darkBlack text-xl md:text-2xl lg:text-[30px] font-semibold">
                 {pagination?.totalCount}
               </h3>
               <div className="bg-lightGreen rounded-[16px] flex items-center gap-1 py-[2px] px-2 h-6">
@@ -396,12 +422,12 @@ export const Consignment = () => {
               </div>
             </div>
           </div>
-          <div className="shadow-shadow3 border border-gray2 rounded-lg p-6">
+          <div className="shadow-shadow3 border border-gray2 rounded-lg p-4 md:p-5 lg:p-6">
             <div className="flex items-center gap-2 justify-between mb-2">
               <p className="text-gray text-sm font-medium">Consignment Sent</p>
             </div>
             <div className="gap-4 flex items-center justify-between">
-              <h3 className="text-darkBlack text-[30px] font-semibold">
+              <h3 className="text-darkBlack text-xl md:text-2xl lg:text-[30px] font-semibold">
                 {pagination?.sentCount}
               </h3>
               <div className="bg-lightGreen rounded-[16px] flex items-center gap-1 py-[2px] px-2 h-6">
@@ -415,14 +441,14 @@ export const Consignment = () => {
               </div>
             </div>
           </div>
-          <div className="shadow-shadow3 border border-gray2 rounded-lg p-6">
+          <div className="shadow-shadow3 border border-gray2 rounded-lg p-4 md:p-5 lg:p-6">
             <div className="flex items-center gap-2 justify-between mb-2">
               <p className="text-gray text-sm font-medium">
                 Consignment not sent
               </p>
             </div>
             <div className="gap-4 flex items-center justify-between">
-              <h3 className="text-darkBlack text-[30px] font-semibold">
+              <h3 className="text-darkBlack text-xl md:text-2xl lg:text-[30px] font-semibold">
                 {pagination?.unsentCount}
               </h3>
               <div className="bg-lightGreen rounded-[16px] flex items-center gap-1 py-[2px] px-2 h-6">
@@ -439,7 +465,7 @@ export const Consignment = () => {
         </div>
 
         <div className="rounded-lg border border-gray2 shadow-shadow1 overflow-hidden">
-          <div className="flex items-center justify-between p-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 gap-2">
             <div className="flex border border-gray rounded-lg h-[40px] overflow-hidden">
               <div
                 className={`px-4 flex items-center h-full justify-center border-r border-gray cursor-pointer ${
@@ -464,11 +490,11 @@ export const Consignment = () => {
                 Sent
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3 desktop:gap-4">
               {selectedRows &&
                 ((selectedRows.sent.length > 0 && status === "sent") ||
                 (selectedRows.unsent.length > 0 && status === "unsent") ? (
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 md:gap-4">
                     <div
                       className="border border-gray rounded-lg flex items-center gap-2 py-[10px] px-4 h-[40px] cursor-pointer"
                       onClick={() => {
@@ -490,13 +516,13 @@ export const Consignment = () => {
                           status === "sent" ? "text-red" : "text-darkParrot"
                         }`}
                       />
-                      <span className="text-black text-sm font-medium">
+                      <span className="text-black text-sm whitespace-nowrap font-medium">
                         {status === "sent"
                           ? "Mark as a Unsent"
                           : "Mark as a Sent"}
                       </span>
                     </div>
-                    <div className="border-l border-gray2 h-[20px]"></div>
+                    <div className="border-l border-gray2 h-[20px] hidden md:block"></div>
                   </div>
                 ) : null)}
 
@@ -505,7 +531,7 @@ export const Consignment = () => {
                 <input
                   type="text"
                   placeholder="Search"
-                  className="focus-within:outline-none"
+                  className="focus-within:outline-none w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -563,7 +589,10 @@ export const Consignment = () => {
                     className="hover:bg-muted/50"
                   >
                     {row.getVisibleCells().map((cell: any) => (
-                      <TableCell key={cell.id} className="px-6 py-3">
+                      <TableCell
+                        key={cell.id}
+                        className="px-4 md:px-6 py-1.5 md:py-3"
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -575,7 +604,7 @@ export const Consignment = () => {
               )}
             </TableBody>
           </Table>
-          <div className="flex justify-between items-center py-4 px-6 border-t border-gray2">
+          <div className="flex justify-between items-center py-3 sm:py-4 px-3 sm:px-6 border-t border-gray2">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
@@ -609,10 +638,7 @@ export const Consignment = () => {
                   Are you sure you want to delete?
                 </p>
                 <div className="flex justify-center mt-5 w-full gap-5 items-center">
-                  <div
-                    onClick={() => setShowConfirm(false)}
-                    className="w-1/2 sm:w-auto"
-                  >
+                  <div onClick={() => setShowConfirm(false)}>
                     <Button
                       text="Cancel"
                       className="border border-gray2 text-black text-sm rounded-[8px] h-[40px] font-medium relative px-4 py-[10px] flex items-center gap-2"
