@@ -28,7 +28,12 @@ export const Sidebar = () => {
 
   const navLinks = [
     { to: "/dashboard", label: "Dashboard", icon: ChartNoAxesColumn },
-    { to: "/consignment", label: "Consignment", icon: Layers },
+    {
+      to: "/consignment",
+      label: "Consignment",
+      icon: Layers,
+      startWith: "/consignment-details",
+    },
     { to: "/delivery", label: "Delivery", icon: SquareCheckBig },
     { to: "/reporting", label: "Reporting", icon: Flag },
     { to: "/users", label: "Users", icon: Users },
@@ -36,26 +41,34 @@ export const Sidebar = () => {
     { to: "/settings", label: "Settings", icon: Settings },
   ];
 
-  const NavLink = ({ to, label, icon: Icon }: any) => (
-    <Link
-      to={to}
-      className={`flex items-center gap-3 py-2 px-3 rounded-[6px] ${
-        location.pathname === to ? "bg-lightPurple" : ""
-      }`}
-      onClick={() => setIsOpen(false)}
-    >
-      <Icon
-        className={`${location.pathname === to ? "text-purple" : "text-gray"}`}
-      />
-      <span
-        className={`font-medium text-base ${
-          location.pathname === to ? "text-purple" : "text-black"
+  const NavLink = ({ to, label, icon: Icon, startWith }: any) => {
+    const isActive = startWith
+      ? location.pathname.startsWith(startWith)
+      : location.pathname === to;
+
+    return (
+      <Link
+        to={to}
+        className={`flex items-center gap-3 py-2 px-3 rounded-[6px] ${
+          isActive ? "bg-lightPurple" : ""
         }`}
+        onClick={() => setIsOpen(false)}
       >
-        {label}
-      </span>
-    </Link>
-  );
+        <Icon
+          className={`${
+            location.pathname === to ? "text-purple" : "text-gray"
+          }`}
+        />
+        <span
+          className={`font-medium text-base ${
+            location.pathname === to ? "text-purple" : "text-black"
+          }`}
+        >
+          {label}
+        </span>
+      </Link>
+    );
+  };
 
   return (
     <>

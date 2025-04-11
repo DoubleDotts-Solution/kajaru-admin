@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Layout } from "./layouts";
 import {
   Consignment,
+  ConsignmentDetail,
   Dashboard,
   Delivery,
   Login,
@@ -33,6 +34,7 @@ export const routes = createBrowserRouter([
       { path: "/reporting", element: <Reporting /> },
       { path: "/support", element: <Support /> },
       { path: "/settings", element: <Settings /> },
+      { path: "/consignment-details/*", element: <ConsignmentDetail /> },
     ],
   },
 ]);

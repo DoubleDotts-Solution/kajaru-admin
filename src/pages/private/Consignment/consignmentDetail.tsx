@@ -1,11 +1,6 @@
 import DateRangePicker from "../../../components/ui/daterangepicker";
 import Button from "../../../components/common/button";
-import { ArrowUp, Check, Plus } from "lucide-react";
-import {
-  useDeleteConsignmentApiMutation,
-  useGetConsignmentApiQuery,
-  useUpdateConsignmentStatusApiMutation,
-} from "../../../store/slice/apiSlice/consignment";
+import { Calendar, Check, Plus } from "lucide-react";
 import { Loader2, Pencil, Trash } from "lucide-react";
 import {
   Table,
@@ -33,8 +28,17 @@ import { formatDateToYYYYMMDD, formatTimestamp } from "../../../lib/utils";
 import toast from "react-hot-toast";
 import Drawer from "../../../components/ui/drawer";
 import { ConsignmentForm } from "./consignmentForm";
+import {
+  useDeleteBoxApiMutation,
+  useGetBoxApiQuery,
+  useUpdateBoxStatusApiMutation,
+} from "../../../store/slice/apiSlice/box";
+import {
+  useDeleteConsignmentApiMutation,
+  useGetSingleConsignmentApiMutation,
+} from "../../../store/slice/apiSlice/consignment";
 
-export const Consignment = () => {
+export const ConsignmentDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -44,6 +48,31 @@ export const Consignment = () => {
     sent: [],
     unsent: [],
   });
+
+  const pathParts = location.pathname.split("/");
+  const id = pathParts[pathParts.length - 1];
+  const [getSingleConsignment] = useGetSingleConsignmentApiMutation();
+  const [consignmentData, setConsignmentData] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchData = async () => {
+      try {
+        const response: any = await getSingleConsignment(id).unwrap();
+
+        if (response.status === 200) {
+          setConsignmentData(response.data);
+        }
+      } catch (error: any) {
+        toast.error(error?.data?.message || "Something went wrong", {
+          position: "top-right",
+        });
+      }
+    };
+
+    fetchData();
+  }, [getSingleConsignment, id]);
 
   const handleDateChange = (start: Date | null, end: Date | null) => {
     setStartDate(start);
@@ -79,34 +108,39 @@ export const Consignment = () => {
     ...(status && { status: status }),
   };
 
-  const { data, isLoading, refetch } = useGetConsignmentApiQuery(params);
-  const consignmentData = (data as any) || {
+  const { data, isLoading, refetch } = useGetBoxApiQuery(params);
+  const boxData = (data as any) || {
     data: [],
     pagination: {
       totalPages: 1,
       currentPage: 1,
       limit: 10,
-      sentCount: 0,
       totalCount: 0,
-      unsentCount: 0,
-      lastMonthSentPercentage: 0,
-      lastMonthTotalPercentage: 0,
-      lastMonthUnsentPercentage: 0,
     },
   };
 
-  const consignment = consignmentData?.data;
+  const box = boxData?.data;
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedId, setSelectedId] = useState<any>(null);
+  const [selectedBy, setSelectedBy] = useState<any>(null);
 
+  const [deleteBox] = useDeleteBoxApiMutation();
   const [deleteConsignment] = useDeleteConsignmentApiMutation();
 
   const handleDelete = async (id: string) => {
     try {
-      const response: any = await deleteConsignment(id).unwrap();
-      toast.success(response.message, { position: "top-right" });
+      if (selectedBy === "consignment") {
+        const response: any = await deleteConsignment(id).unwrap();
+
+        toast.success(response.message, { position: "top-right" });
+        navigate("/consignment");
+      } else {
+        const response: any = await deleteBox(id).unwrap();
+        toast.success(response.message, { position: "top-right" });
+      }
       setShowConfirm(false);
+      setSelectedBy(null);
       refetch();
     } catch (error: any) {
       toast.error(error.data.message, { position: "top-right" });
@@ -203,20 +237,29 @@ export const Consignment = () => {
         },
       },
       {
-        accessorKey: "Consignment No.",
-        header: "Consignment No.",
+        accessorKey: "Box ID",
+        header: "Box ID",
         cell: ({ row }: any) => {
           return (
             <>
               <Link
-                to={`/consignment-details/${row.original.id}`}
+                to={`/consignment/${row.original.id}`}
                 className="text-purple text-sm font-semibold w-max cursor-pointer"
               >
-                {row.original.consignment_number}
+                {row.original.box_id}
               </Link>
             </>
           );
         },
+      },
+      {
+        accessorKey: "Max Box Capacity",
+        header: "Max Box Capacity",
+        cell: ({ row }: any) => (
+          <p className="font-semibold text-sm text-darkBlack w-max">
+            {row.original.max_box_capacity}
+          </p>
+        ),
       },
       {
         accessorKey: "Created On",
@@ -228,59 +271,22 @@ export const Consignment = () => {
         ),
       },
       {
-        accessorKey: "No. of Box",
-        header: "No. of Box",
+        accessorKey: "Product Packed",
+        header: "Product Packed",
         cell: ({ row }: any) => (
           <p className="text-sm text-darkBlack w-max">
-            {row.original.number_of_box}
+            {row.original.product_packed}
           </p>
         ),
       },
       {
-        accessorKey: "Tags",
-        header: "Tags",
-        cell: ({ row }: any) => {
-          const rawTags = row.original.tags;
-          const tagsArray = rawTags
-            .split(",")
-            .map((tag: string) => tag.trim().replace(/^'+|'+$/g, ""));
-
-          const visibleTags = tagsArray.slice(0, 2);
-          const extraCount = tagsArray.length - visibleTags.length;
-
-          return (
-            <div className="flex flex-wrap gap-2 w-max">
-              {visibleTags.map((tag: string, idx: number) => (
-                <span
-                  key={idx}
-                  className="bg-gray6 text-sm text-black3 px-2 py-0.5 rounded-full"
-                >
-                  #{tag}
-                </span>
-              ))}
-
-              {extraCount > 0 && (
-                <span className="bg-gray6 text-sm text-black3 px-2 py-0.5 rounded-full">
-                  +{extraCount}
-                </span>
-              )}
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: "Consignment Exls",
-        header: "Consignment Exls",
-        cell: ({ row }: any) => {
-          return (
-            <div className="flex items-center gap-2 w-max">
-              <img src={Ic_excel} alt="excel_icon" />
-              <p className="text-sm font-medium text-darkBlack">
-                Consignment.exls
-              </p>
-            </div>
-          );
-        },
+        accessorKey: "Product Unpacked",
+        header: "Product Unpacked",
+        cell: ({ row }: any) => (
+          <p className="text-sm text-darkBlack w-max">
+            {row.original.max_box_capacity - row.original.product_packed}
+          </p>
+        ),
       },
       {
         accessorKey: "Status",
@@ -324,10 +330,10 @@ export const Consignment = () => {
     ],
     [navigate, selectedRows]
   );
-  const pagination = consignmentData?.pagination;
+  const pagination = boxData?.pagination;
 
   const table = useReactTable({
-    data: consignment,
+    data: box,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -338,7 +344,7 @@ export const Consignment = () => {
         pageSize: pagination?.limit,
       },
     },
-    pageCount: Math.ceil(consignment?.length / pagination?.limit),
+    pageCount: Math.ceil(box?.length / pagination?.limit),
     manualPagination: true,
     onPaginationChange: (updater: any) => {
       if (typeof updater === "function") {
@@ -351,11 +357,11 @@ export const Consignment = () => {
     },
   });
 
-  const [updateStatus] = useUpdateConsignmentStatusApiMutation();
+  const [updateStatus] = useUpdateBoxStatusApiMutation();
   const handleUpdateStatus = async (ids: string, status: string) => {
     try {
       const payload = {
-        consignment_id: ids,
+        box_id: ids,
         status: status,
       };
 
@@ -375,20 +381,20 @@ export const Consignment = () => {
     }
   }, [location.search]);
 
-  const openDrawer = () => {
-    setDrawerOpen(true);
-    navigate("?add-consignment");
-  };
+  // const openDrawer = () => {
+  //   setDrawerOpen(true);
+  //   navigate("?add-box");
+  // };
   const closeDrawer = () => {
     setDrawerOpen(false);
-    navigate("/consignment");
+    navigate(`/consignment-details/${id}`);
   };
   return (
     <>
       <div className="py-6 md:py-8 px-4 md:px-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 md:mb-8">
           <h2 className="text-darkBlack text-xl md:text-2xl lg:text-[28px] desktop:text-[32px] font-medium">
-            Consignment
+            Consignment Details
           </h2>
           <div className="flex flex-col sm:flex-row gap-4 md:h-[40px] md:items-center">
             <DateRangePicker
@@ -397,72 +403,90 @@ export const Consignment = () => {
               onDateChange={handleDateChange}
             />
             <Button
-              text={"Create Consignment"}
+              text={"Scan Box"}
               className={`bg-purple shadow-shadow2 text-white`}
               icon={<Plus className="text-white w-5 h-5" />}
-              onClick={openDrawer}
+              // onClick={openDrawer}
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 lg:gap-6 mb-4 md:mb-6">
-          <div className="shadow-shadow3 border border-gray2 rounded-lg p-4 md:p-5 lg:p-6">
-            <div className="flex items-center gap-2 justify-between mb-2">
-              <p className="text-gray text-sm font-medium">Total Consignment</p>
+        <div className="rounded-lg border border-gray2 shadow-shadow1 overflow-hidden mb-6">
+          <div className="p-6 border-b border-gray2">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <h2 className="text-darkBlack text-2xl font-medium">
+                {consignmentData?.consignment_number}
+              </h2>
+              {consignmentData?.status === "unsent" ? (
+                <p className="text-sm bg-lightRed text-darkRed py-[2px] px-[10px] font-medium rounded-[16px] w-max">
+                  Unsent
+                </p>
+              ) : (
+                <p className="text-sm bg-lightGreen text-darkGreen py-[2px] px-[10px] font-medium rounded-[16px] w-max">
+                  Sent
+                </p>
+              )}
             </div>
-            <div className="gap-4 flex items-center justify-between">
-              <h3 className="text-darkBlack text-xl md:text-2xl lg:text-[30px] font-semibold">
-                {pagination?.totalCount}
-              </h3>
-              <div className="bg-lightGreen rounded-[16px] flex items-center gap-1 py-[2px] px-2 h-6">
-                <ArrowUp className="w-3 h-3 text-darkParrot" />
-                <p className="text-darkGreen text-xs font-medium">
-                  <span className="text-sm">
-                    {pagination?.lastMonthTotalPercentage}%
-                  </span>{" "}
-                  From Last month
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <p className="text-gray font-medium tex-base">
+                    No. of Boxes:
+                  </p>
+                  <span className="text-darkBlack font-medium text-base">
+                    {consignmentData?.number_of_box}
+                  </span>
+                </div>
+                <div className="border-l border-[#D1D4DA] h-[14px]"></div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="text-darkBlack w-5 h-5" />
+                  <span className="text-darkBlack font-medium text-base">
+                    {formatTimestamp(consignmentData?.updatedAt)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 w-max">
+                <img src={Ic_excel} alt="excel_icon" />
+                <p className="text-sm font-medium text-darkBlack">
+                  Consignment.exls
                 </p>
               </div>
             </div>
           </div>
-          <div className="shadow-shadow3 border border-gray2 rounded-lg p-4 md:p-5 lg:p-6">
-            <div className="flex items-center gap-2 justify-between mb-2">
-              <p className="text-gray text-sm font-medium">Consignment Sent</p>
-            </div>
-            <div className="gap-4 flex items-center justify-between">
-              <h3 className="text-darkBlack text-xl md:text-2xl lg:text-[30px] font-semibold">
-                {pagination?.sentCount}
-              </h3>
-              <div className="bg-lightGreen rounded-[16px] flex items-center gap-1 py-[2px] px-2 h-6">
-                <ArrowUp className="w-3 h-3 text-darkParrot" />
-                <p className="text-darkGreen text-xs font-medium">
-                  <span className="text-sm">
-                    {pagination?.lastMonthSentPercentage}%
-                  </span>{" "}
-                  From Last month
-                </p>
+          <div className="p-6 flex items-center gap-2 justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-gray text-base font-medium">Tags:</span>
+              <div className="flex flex-wrap gap-2 w-max">
+                {consignmentData?.tags
+                  .split(",")
+                  .map((tag: string, idx: number) => (
+                    <span
+                      key={idx}
+                      className="bg-gray6 text-sm text-black3 px-3 py-0.5 rounded-full"
+                    >
+                      #{tag.trim().replace(/^'+|'+$/g, "")}
+                    </span>
+                  ))}
               </div>
             </div>
-          </div>
-          <div className="shadow-shadow3 border border-gray2 rounded-lg p-4 md:p-5 lg:p-6">
-            <div className="flex items-center gap-2 justify-between mb-2">
-              <p className="text-gray text-sm font-medium">
-                Consignment not sent
-              </p>
-            </div>
-            <div className="gap-4 flex items-center justify-between">
-              <h3 className="text-darkBlack text-xl md:text-2xl lg:text-[30px] font-semibold">
-                {pagination?.unsentCount}
-              </h3>
-              <div className="bg-lightGreen rounded-[16px] flex items-center gap-1 py-[2px] px-2 h-6">
-                <ArrowUp className="w-3 h-3 text-darkParrot" />
-                <p className="text-darkGreen text-xs font-medium">
-                  <span className="text-sm">
-                    {pagination?.lastMonthUnsentPercentage}%
-                  </span>{" "}
-                  From Last month
-                </p>
-              </div>
+            <div className="flex items-center justify-center gap-3">
+              <Pencil
+                className="h-5 w-5 text-primary cursor-pointer"
+                onClick={() => {
+                  navigate(
+                    `/consignment?edit-consignment=${consignmentData?.id}`
+                  );
+                  setDrawerOpen(true);
+                }}
+              />
+
+              <Trash
+                className="h-5 w-5 text-red cursor-pointer"
+                onClick={() => {
+                  confirmDelete(consignmentData?.id);
+                  setSelectedBy("consignment");
+                }}
+              />
             </div>
           </div>
         </div>
@@ -574,7 +598,7 @@ export const Consignment = () => {
                     <Loader2 className="w-6 h-6 animate-spin mx-auto" />
                   </TableCell>
                 </TableRow>
-              ) : consignment?.length === 0 ? (
+              ) : box?.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={columns?.length}

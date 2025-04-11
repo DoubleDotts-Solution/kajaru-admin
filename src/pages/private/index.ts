@@ -5,3 +5,4 @@ export { Reporting } from "./Reporting";
 export { Delivery } from "./Delivery";
 export { Support } from "./Support";
 export { Settings } from "./Settings";
+export { ConsignmentDetail } from "./Consignment/consignmentDetail";
