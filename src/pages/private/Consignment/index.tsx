@@ -471,7 +471,7 @@ export const Consignment = () => {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 gap-2">
             <div className="flex border border-gray rounded-lg h-[40px] overflow-hidden">
               <div
-                className={`px-4 flex items-center h-full justify-center border-r border-gray cursor-pointer ${
+                className={`px-2.5 md:px-4 flex items-center h-full justify-center text-sm md:text-base border-r border-gray cursor-pointer ${
                   status === "unsent" ? "text-purple bg-gray5" : "text-black"
                 }`}
                 onClick={() => {
@@ -482,7 +482,7 @@ export const Consignment = () => {
                 Unsent
               </div>
               <div
-                className={`px-4 flex items-center h-full justify-center cursor-pointer ${
+                className={`px-2.5 md:px-4 flex items-center h-full justify-center text-sm md:text-base cursor-pointer ${
                   status === "sent" ? "text-purple bg-gray5" : "text-black"
                 }`}
                 onClick={() => {
@@ -613,10 +613,10 @@ export const Consignment = () => {
               disabled={currentPage === 1}
               className="px-[14px] py-2 rounded-lg disabled:opacity-50 shadow-shadow1 border border-gray text-black font-semibold text-sm"
             >
-              Forrige
+              Previous
             </button>
             <span className="text-black text-sm">
-              Side <span className="font-semibold">{currentPage}</span> av{" "}
+              Page <span className="font-semibold">{currentPage}</span> of{" "}
               <span className="font-semibold">{pagination?.totalPages}</span>
             </span>
             <button
@@ -628,7 +628,7 @@ export const Consignment = () => {
               disabled={currentPage === pagination?.totalPages}
               className="px-[14px] py-2 rounded-lg disabled:opacity-50 shadow-shadow1 border border-gray text-black font-semibold text-sm"
             >
-              Neste
+              Next
             </button>
           </div>
         </div>

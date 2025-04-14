@@ -1,6 +1,6 @@
 import DateRangePicker from "../../../components/ui/daterangepicker";
 import Button from "../../../components/common/button";
-import { Calendar, Check, Plus } from "lucide-react";
+import { Calendar, Check, Plus, ScanLine, X } from "lucide-react";
 import { Loader2, Pencil, Trash } from "lucide-react";
 import {
   Table,
@@ -27,7 +27,6 @@ import Modal from "../../../components/common/modal";
 import { formatDateToYYYYMMDD, formatTimestamp } from "../../../lib/utils";
 import toast from "react-hot-toast";
 import Drawer from "../../../components/ui/drawer";
-import { ConsignmentForm } from "./consignmentForm";
 import {
   useDeleteBoxApiMutation,
   useGetBoxApiQuery,
@@ -37,6 +36,7 @@ import {
   useDeleteConsignmentApiMutation,
   useGetSingleConsignmentApiMutation,
 } from "../../../store/slice/apiSlice/consignment";
+import { BoxForm } from "./boxForm";
 
 export const ConsignmentDetail = () => {
   const navigate = useNavigate();
@@ -122,6 +122,7 @@ export const ConsignmentDetail = () => {
   const box = boxData?.data;
 
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showScanBox, setShowScanBox] = useState(false);
   const [selectedId, setSelectedId] = useState<any>(null);
   const [selectedBy, setSelectedBy] = useState<any>(null);
 
@@ -153,6 +154,14 @@ export const ConsignmentDetail = () => {
       setShowConfirm(false);
     } else {
       setShowConfirm(true);
+    }
+  };
+
+  const handleScanConfirmPopup = () => {
+    if (showScanBox) {
+      setShowScanBox(false);
+    } else {
+      setShowScanBox(true);
     }
   };
 
@@ -314,7 +323,7 @@ export const ConsignmentDetail = () => {
               <Pencil
                 className="h-5 w-5 text-primary cursor-pointer"
                 onClick={() => {
-                  navigate(`?edit-consignment=${row.original.id}`);
+                  navigate(`?edit-box-detail=${row.original.id}`);
                   setDrawerOpen(true);
                 }}
               />
@@ -374,7 +383,7 @@ export const ConsignmentDetail = () => {
   };
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.has("add-consignment") || params.has("edit-consignment")) {
+    if (params.has("edit-box-detail")) {
       setDrawerOpen(true);
     } else {
       setDrawerOpen(false);
@@ -406,57 +415,65 @@ export const ConsignmentDetail = () => {
               text={"Scan Box"}
               className={`bg-purple shadow-shadow2 text-white`}
               icon={<Plus className="text-white w-5 h-5" />}
-              // onClick={openDrawer}
+              onClick={() => {
+                setShowScanBox(true);
+              }}
             />
           </div>
         </div>
 
-        <div className="rounded-lg border border-gray2 shadow-shadow1 overflow-hidden mb-6">
-          <div className="p-6 border-b border-gray2">
+        <div className="rounded-lg border border-gray2 shadow-shadow1 overflow-hidden mb-4 md:mb-6">
+          <div className="p-4 md:p-5 desktop:p-6 border-b border-gray2">
             <div className="flex items-center justify-between gap-2 mb-3">
-              <h2 className="text-darkBlack text-2xl font-medium">
+              <h2 className="text-darkBlack text-lg md:text-xl desktop:text-2xl font-medium">
                 {consignmentData?.consignment_number}
               </h2>
               {consignmentData?.status === "unsent" ? (
-                <p className="text-sm bg-lightRed text-darkRed py-[2px] px-[10px] font-medium rounded-[16px] w-max">
+                <p className="text-xs md:text-sm bg-lightRed text-darkRed py-[2px] px-[10px] font-medium rounded-[16px] w-max">
                   Unsent
                 </p>
               ) : (
-                <p className="text-sm bg-lightGreen text-darkGreen py-[2px] px-[10px] font-medium rounded-[16px] w-max">
+                <p className="text-xs md:text-sm bg-lightGreen text-darkGreen py-[2px] px-[10px] font-medium rounded-[16px] w-max">
                   Sent
                 </p>
               )}
             </div>
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2 md:gap-3">
                 <div className="flex items-center gap-1">
-                  <p className="text-gray font-medium tex-base">
+                  <p className="text-gray font-medium text-xs md:text-sm desktop:text-base">
                     No. of Boxes:
                   </p>
-                  <span className="text-darkBlack font-medium text-base">
+                  <span className="text-darkBlack font-medium text-xs md:text-sm desktop:text-base">
                     {consignmentData?.number_of_box}
                   </span>
                 </div>
                 <div className="border-l border-[#D1D4DA] h-[14px]"></div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="text-darkBlack w-5 h-5" />
-                  <span className="text-darkBlack font-medium text-base">
+                  <Calendar className="text-darkBlack h-3 w-3 md:w-5 md:h-5" />
+                  <span className="text-darkBlack font-medium text-xs md:text-sm desktop:text-base">
                     {formatTimestamp(consignmentData?.updatedAt)}
                   </span>
                 </div>
               </div>
               <div className="flex items-center gap-2 w-max">
-                <img src={Ic_excel} alt="excel_icon" />
-                <p className="text-sm font-medium text-darkBlack">
+                <img
+                  src={Ic_excel}
+                  alt="excel_icon"
+                  className="w-4 h-4 md:w-auto md:h-auto"
+                />
+                <p className="text-xs md:text-sm font-medium text-darkBlack">
                   Consignment.exls
                 </p>
               </div>
             </div>
           </div>
-          <div className="p-6 flex items-center gap-2 justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-gray text-base font-medium">Tags:</span>
-              <div className="flex flex-wrap gap-2 w-max">
+          <div className="p-4 md:p-5 desktop:p-6 flex items-center gap-2 justify-between">
+            <div className="flex gap-3">
+              <span className="text-gray text-xs md:text-sm desktop:text-base font-medium">
+                Tags:
+              </span>
+              <div className="flex flex-wrap gap-2">
                 {consignmentData?.tags
                   .split(",")
                   .map((tag: string, idx: number) => (
@@ -495,7 +512,7 @@ export const ConsignmentDetail = () => {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 gap-2">
             <div className="flex border border-gray rounded-lg h-[40px] overflow-hidden">
               <div
-                className={`px-4 flex items-center h-full justify-center border-r border-gray cursor-pointer ${
+                className={`px-2.5 md:px-4 flex items-center h-full justify-center text-sm md:text-base border-r border-gray cursor-pointer ${
                   status === "unsent" ? "text-purple bg-gray5" : "text-black"
                 }`}
                 onClick={() => {
@@ -506,7 +523,7 @@ export const ConsignmentDetail = () => {
                 Unsent
               </div>
               <div
-                className={`px-4 flex items-center h-full justify-center cursor-pointer ${
+                className={`px-2.5 md:px-4 flex items-center h-full justify-center text-sm md:text-base cursor-pointer ${
                   status === "sent" ? "text-purple bg-gray5" : "text-black"
                 }`}
                 onClick={() => {
@@ -637,10 +654,10 @@ export const ConsignmentDetail = () => {
               disabled={currentPage === 1}
               className="px-[14px] py-2 rounded-lg disabled:opacity-50 shadow-shadow1 border border-gray text-black font-semibold text-sm"
             >
-              Forrige
+              Previous
             </button>
             <span className="text-black text-sm">
-              Side <span className="font-semibold">{currentPage}</span> av{" "}
+              Page <span className="font-semibold">{currentPage}</span> of{" "}
               <span className="font-semibold">{pagination?.totalPages}</span>
             </span>
             <button
@@ -652,7 +669,7 @@ export const ConsignmentDetail = () => {
               disabled={currentPage === pagination?.totalPages}
               className="px-[14px] py-2 rounded-lg disabled:opacity-50 shadow-shadow1 border border-gray text-black font-semibold text-sm"
             >
-              Neste
+              Next
             </button>
           </div>
         </div>
@@ -685,8 +702,33 @@ export const ConsignmentDetail = () => {
 
         {isDrawerOpen && (
           <Drawer onClose={closeDrawer}>
-            <ConsignmentForm refetch={refetch} closeDrawer={closeDrawer} />
+            <BoxForm refetch={refetch} closeDrawer={closeDrawer} />
           </Drawer>
+        )}
+
+        {showScanBox && (
+          <Modal onClose={handleScanConfirmPopup} isOpen={true}>
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+              <div className="bg-white p-8 rounded-lg shadow-lg relative flex flex-col items-center">
+                <div
+                  onClick={() => setShowScanBox(false)}
+                  className="absolute top-3 right-3 cursor-pointer"
+                >
+                  <X className="text-purple" />
+                </div>
+                <div className="w-[76px] h-[76px] bg-lightPurple rounded-full p-5 flex items-center justify-center mb-6">
+                  <ScanLine className="text-purple w-9 h-9" />
+                </div>
+                <h2 className="text-darkBlack text-lg md:text-xl desktop:text-2xl font-medium mb-3">
+                  Scan QR on Box
+                </h2>
+                <p className="text-gray text-sm desktop:text-base font-medium text-center">
+                  Scan QR code that available on Box to <br /> create new box
+                  and then you can add <br /> SKU in Box
+                </p>
+              </div>
+            </div>
+          </Modal>
         )}
       </div>
     </>

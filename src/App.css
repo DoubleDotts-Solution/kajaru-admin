@@ -8,3 +8,7 @@ input::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+.border-transparent {
+  border-color: transparent !important;
+}

@@ -151,7 +151,7 @@ export const ConsignmentForm = ({
 
   return (
     <>
-      <div className="bg-gray2 p-4 lg:p-6 border-b border-gray2">
+      <div className="bg-gray5 p-4 lg:p-6 border-b border-gray2">
         <h5 className="text-darkBlack text-base md:text-xl desktop:text-2xl font-medium">
           {id ? "Update Consignment" : "Create Consignment"}
         </h5>
