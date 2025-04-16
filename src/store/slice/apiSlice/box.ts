@@ -52,6 +52,12 @@ const boxApi = mainApi.injectEndpoints({
         body: data,
       }),
     }),
+    getBoxProductApi: builder.query<unknown, number>({
+      query: (id: number) => ({
+        url: `box/find-box-product/${id}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -62,4 +68,5 @@ export const {
   useDeleteBoxApiMutation,
   useGetSingleBoxApiMutation,
   useUpdateBoxApiMutation,
+  useGetBoxProductApiQuery,
 } = boxApi;

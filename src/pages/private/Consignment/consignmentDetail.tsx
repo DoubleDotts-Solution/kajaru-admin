@@ -702,7 +702,7 @@ export const ConsignmentDetail = () => {
 
         {isDrawerOpen && (
           <Drawer onClose={closeDrawer}>
-            <BoxForm refetch={refetch} closeDrawer={closeDrawer} />
+            <BoxForm closeDrawer={closeDrawer} />
           </Drawer>
         )}
 
