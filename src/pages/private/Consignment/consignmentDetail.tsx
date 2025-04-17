@@ -1,7 +1,7 @@
 import DateRangePicker from "../../../components/ui/daterangepicker";
 import Button from "../../../components/common/button";
-import { Calendar, Check, Plus, ScanLine, X } from "lucide-react";
-import { Loader2, Pencil, Trash } from "lucide-react";
+import { Calendar, Check, Plus, ScanLine, Trash2, X } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -37,6 +37,7 @@ import {
   useGetSingleConsignmentApiMutation,
 } from "../../../store/slice/apiSlice/consignment";
 import { BoxForm } from "./boxForm";
+import { ViewBoxForm } from "./viewBoxForm";
 
 export const ConsignmentDetail = () => {
   const navigate = useNavigate();
@@ -170,6 +171,7 @@ export const ConsignmentDetail = () => {
     setShowConfirm(true);
   };
   const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const [openDrawerValue, setOpenDrawerValue] = useState("");
 
   const columns = useMemo<ColumnDef<any>[]>(
     () => [
@@ -252,8 +254,12 @@ export const ConsignmentDetail = () => {
           return (
             <>
               <Link
-                to={`/consignment/${row.original.id}`}
+                to={`?view-box-detail=${row.original.id}`}
                 className="text-purple text-sm font-semibold w-max cursor-pointer"
+                onClick={() => {
+                  setOpenDrawerValue("view");
+                  setDrawerOpen(true);
+                }}
               >
                 {row.original.box_id}
               </Link>
@@ -325,11 +331,12 @@ export const ConsignmentDetail = () => {
                 onClick={() => {
                   navigate(`?edit-box-detail=${row.original.id}`);
                   setDrawerOpen(true);
+                  setOpenDrawerValue("edit");
                 }}
               />
 
-              <Trash
-                className="h-5 w-5 text-primary cursor-pointer"
+              <Trash2
+                className="h-5 w-5 text-darkRed cursor-pointer"
                 onClick={() => confirmDelete(row.original.id)}
               />
             </div>
@@ -383,20 +390,23 @@ export const ConsignmentDetail = () => {
   };
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.has("edit-box-detail")) {
+    if (params.has("edit-box-detail") || params.has("view-box-detail")) {
       setDrawerOpen(true);
+      if (params.has("view-box-detail")) {
+        setOpenDrawerValue("view");
+      }
+      if (params.has("edit-box-detail")) {
+        setOpenDrawerValue("edit");
+      }
     } else {
       setDrawerOpen(false);
     }
   }, [location.search]);
 
-  // const openDrawer = () => {
-  //   setDrawerOpen(true);
-  //   navigate("?add-box");
-  // };
   const closeDrawer = () => {
     setDrawerOpen(false);
     navigate(`/consignment-details/${id}`);
+    setOpenDrawerValue("");
   };
   return (
     <>
@@ -497,8 +507,8 @@ export const ConsignmentDetail = () => {
                 }}
               />
 
-              <Trash
-                className="h-5 w-5 text-red cursor-pointer"
+              <Trash2
+                className="h-5 w-5 text-darkRed cursor-pointer"
                 onClick={() => {
                   confirmDelete(consignmentData?.id);
                   setSelectedBy("consignment");
@@ -700,9 +710,15 @@ export const ConsignmentDetail = () => {
           </Modal>
         )}
 
-        {isDrawerOpen && (
+        {isDrawerOpen && openDrawerValue === "edit" && (
           <Drawer onClose={closeDrawer}>
             <BoxForm closeDrawer={closeDrawer} />
+          </Drawer>
+        )}
+
+        {isDrawerOpen && openDrawerValue === "view" && (
+          <Drawer onClose={closeDrawer}>
+            <ViewBoxForm closeDrawer={closeDrawer} />
           </Drawer>
         )}
 

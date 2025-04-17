@@ -89,6 +89,7 @@ export const Delivery = () => {
     data: [],
     pagination: { totalCount: 0, currentPage: 1, limit: 10, totalPages: 1 },
     platformCounts: { meesho: 0, flipkart: 0, myntra: 0, ajio: 0 },
+    platformPercentage: { meesho: 0, flipkart: 0, myntra: 0, ajio: 0 },
   };
 
   const delivery = deliveryData?.data;
@@ -297,7 +298,7 @@ export const Delivery = () => {
                 <ArrowUp className="w-3 h-3 text-darkParrot" />
                 <p className="text-darkGreen text-xs font-medium">
                   <span className="text-sm">
-                    {pagination?.lastMonthTotalPercentage}%
+                    {deliveryData?.platformPercentage?.myntra}%
                   </span>{" "}
                   From Last month
                 </p>
@@ -316,7 +317,7 @@ export const Delivery = () => {
                 <ArrowUp className="w-3 h-3 text-darkParrot" />
                 <p className="text-darkGreen text-xs font-medium">
                   <span className="text-sm">
-                    {pagination?.lastMonthSentPercentage}%
+                    {deliveryData?.platformPercentage?.meesho}%
                   </span>{" "}
                   From Last month
                 </p>
@@ -335,7 +336,7 @@ export const Delivery = () => {
                 <ArrowUp className="w-3 h-3 text-darkParrot" />
                 <p className="text-darkGreen text-xs font-medium">
                   <span className="text-sm">
-                    {pagination?.lastMonthUnsentPercentage}%
+                    {deliveryData?.platformPercentage?.flipkart}%
                   </span>{" "}
                   From Last month
                 </p>
@@ -354,7 +355,7 @@ export const Delivery = () => {
                 <ArrowUp className="w-3 h-3 text-darkParrot" />
                 <p className="text-darkGreen text-xs font-medium">
                   <span className="text-sm">
-                    {pagination?.lastMonthUnsentPercentage}%
+                    {deliveryData?.platformPercentage?.ajio}%
                   </span>{" "}
                   From Last month
                 </p>

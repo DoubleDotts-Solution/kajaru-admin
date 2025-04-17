@@ -1,12 +1,12 @@
 import DateRangePicker from "../../../components/ui/daterangepicker";
 import Button from "../../../components/common/button";
-import { ArrowUp, Check, Plus } from "lucide-react";
+import { ArrowUp, Check, Plus, Trash2 } from "lucide-react";
 import {
   useDeleteConsignmentApiMutation,
   useGetConsignmentApiQuery,
   useUpdateConsignmentStatusApiMutation,
 } from "../../../store/slice/apiSlice/consignment";
-import { Loader2, Pencil, Trash } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -313,8 +313,8 @@ export const Consignment = () => {
                 }}
               />
 
-              <Trash
-                className="h-5 w-5 text-primary cursor-pointer"
+              <Trash2
+                className="h-5 w-5 text-darkRed cursor-pointer"
                 onClick={() => confirmDelete(row.original.id)}
               />
             </div>

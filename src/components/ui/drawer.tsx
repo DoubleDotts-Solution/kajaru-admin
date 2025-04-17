@@ -29,7 +29,7 @@ const Drawer = ({
 
       <div
         className={`
-          ml-auto h-full w-full max-w-md bg-white shadow-xl transform transition-transform duration-300
+          ml-auto h-full w-full max-w-lg bg-white shadow-xl transform transition-transform duration-300
           ${isVisible ? "translate-x-0" : "translate-x-full"}
         `}
       >
