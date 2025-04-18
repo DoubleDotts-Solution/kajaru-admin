@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ChartNoAxesColumn,
   Flag,
@@ -13,14 +13,21 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import Ic_logo from "../assets/images/Ic_logo.svg";
+import { clearCredentials } from "../store/slice/auth.slice";
+import Modal from "./common/modal";
+import Button from "./common/button";
+import toast from "react-hot-toast";
 
 export const Sidebar = () => {
   const location = useLocation();
   const userDetails = useSelector((state: RootState) => state.user.userDetails);
   const [isOpen, setIsOpen] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -42,9 +49,8 @@ export const Sidebar = () => {
   ];
 
   const NavLink = ({ to, label, icon: Icon, startWith }: any) => {
-    const isActive = startWith
-      ? location.pathname.startsWith(startWith)
-      : location.pathname === to;
+    const isActive =
+      location.pathname.startsWith(startWith) || location.pathname === to;
 
     return (
       <Link
@@ -68,6 +74,14 @@ export const Sidebar = () => {
         </span>
       </Link>
     );
+  };
+
+  const handleConfirmPopup = () => {
+    if (showConfirm) {
+      setShowConfirm(false);
+    } else {
+      setShowConfirm(true);
+    }
   };
 
   return (
@@ -125,7 +139,10 @@ export const Sidebar = () => {
             <div className="border-t border-gray2"></div>
 
             {/* User Info */}
-            <div className="flex items-center gap-1 px-3 rounded-[6px] cursor-pointer">
+            <div
+              className="flex items-center gap-1 px-3 rounded-[6px] cursor-pointer"
+              onClick={handleConfirmPopup}
+            >
               <div className="flex items-center gap-3 truncate">
                 <div className="w-8 h-8">
                   <div className="w-8 h-8 rounded-full border text-sm flex items-center justify-center border-gray text-gray">
@@ -148,6 +165,40 @@ export const Sidebar = () => {
           </div>
         </div>
       </div>
+
+      {showConfirm && (
+        <Modal onClose={handleConfirmPopup} isOpen={true}>
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <p className="text-lg font-bold">
+                Are you sure you want to log out?
+              </p>
+              <div className="flex justify-center mt-5 w-full gap-5 items-center">
+                <div onClick={() => setShowConfirm(false)}>
+                  <Button
+                    text="Cancel"
+                    className="border border-gray2 text-black text-sm rounded-[8px] h-[40px] font-medium relative px-4 py-[10px] flex items-center gap-2"
+                  />
+                </div>
+                <div
+                  onClick={() => {
+                    dispatch(clearCredentials());
+                    navigate("/login");
+                    toast.success("Log out successfully!!", {
+                      position: "top-right",
+                    });
+                  }}
+                >
+                  <Button
+                    text="Confirm"
+                    className="border border-purple bg-purple text-white text-sm rounded-[8px] h-[40px] font-medium relative px-4 py-[10px] flex items-center gap-2"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
     </>
   );
 };
