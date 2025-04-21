@@ -24,16 +24,16 @@ import Ic_excel from "../../../assets/images/Ic_excel.svg";
 import Ic_filter from "../../../assets/images/Ic_filter.svg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Modal from "../../../components/common/modal";
-import { formatDateToYYYYMMDD, formatTimestamp } from "../../../lib/utils";
+import { formatTimestamp } from "../../../lib/utils";
 import toast from "react-hot-toast";
 import Drawer from "../../../components/ui/drawer";
 import {
   useDeleteBoxApiMutation,
-  useGetBoxApiQuery,
   useUpdateBoxStatusApiMutation,
 } from "../../../store/slice/apiSlice/box";
 import {
   useDeleteConsignmentApiMutation,
+  useGetBoxConsignmentApiQuery,
   useGetSingleConsignmentApiMutation,
 } from "../../../store/slice/apiSlice/consignment";
 import { BoxForm } from "./boxForm";
@@ -51,7 +51,7 @@ export const ConsignmentDetail = () => {
   });
 
   const pathParts = location.pathname.split("/");
-  const id = pathParts[pathParts.length - 1];
+  const id = pathParts[pathParts?.length - 1];
   const [getSingleConsignment] = useGetSingleConsignmentApiMutation();
   const [consignmentData, setConsignmentData] = useState<any | null>(null);
 
@@ -95,32 +95,27 @@ export const ConsignmentDetail = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const perPage = 10;
+  const perPage = 19;
 
-  const params = {
-    page: currentPage,
-    limit: perPage,
-    value: searchTerm,
-    ...(startDate &&
-      endDate && {
-        start_date: formatDateToYYYYMMDD(startDate),
-        end_date: formatDateToYYYYMMDD(endDate),
-      }),
-    ...(status && { status: status }),
+  const idNumber = Number(id);
+
+  const { data, isLoading, refetch } = useGetBoxConsignmentApiQuery(idNumber, {
+    skip: !id || isNaN(idNumber),
+  });
+
+  const boxData = (data as any)?.data || {
+    box: [],
   };
 
-  const { data, isLoading, refetch } = useGetBoxApiQuery(params);
-  const boxData = (data as any) || {
-    data: [],
-    pagination: {
-      totalPages: 1,
-      currentPage: 1,
-      limit: 10,
-      totalCount: 0,
-    },
-  };
+  const box = useMemo(() => {
+    return boxData?.box.filter((item: any) => item.status === status);
+  }, [boxData?.box, status]);
 
-  const box = boxData?.data;
+  const paginatedBox = useMemo(() => {
+    const start = (currentPage - 1) * perPage;
+    const end = start + perPage;
+    return box.slice(start, end);
+  }, [box, currentPage, perPage]);
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [showScanBox, setShowScanBox] = useState(false);
@@ -346,10 +341,9 @@ export const ConsignmentDetail = () => {
     ],
     [navigate, selectedRows]
   );
-  const pagination = boxData?.pagination;
 
   const table = useReactTable({
-    data: box,
+    data: paginatedBox,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -357,16 +351,16 @@ export const ConsignmentDetail = () => {
     state: {
       pagination: {
         pageIndex: currentPage - 1,
-        pageSize: pagination?.limit,
+        pageSize: perPage,
       },
     },
-    pageCount: Math.ceil(box?.length / pagination?.limit),
+    pageCount: Math.ceil(box?.length / perPage),
     manualPagination: true,
     onPaginationChange: (updater: any) => {
       if (typeof updater === "function") {
         const newState = updater({
           pageIndex: currentPage - 1,
-          perPage: pagination?.limit,
+          perPage: perPage,
         });
         setCurrentPage(newState.pageIndex + 1);
       }
@@ -527,7 +521,7 @@ export const ConsignmentDetail = () => {
                 }`}
                 onClick={() => {
                   setStatus("unsent");
-                  refetch();
+                  setCurrentPage(1);
                 }}
               >
                 Unsent
@@ -538,7 +532,7 @@ export const ConsignmentDetail = () => {
                 }`}
                 onClick={() => {
                   setStatus("sent");
-                  refetch();
+                  setCurrentPage(1);
                 }}
               >
                 Sent
@@ -546,8 +540,8 @@ export const ConsignmentDetail = () => {
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3 desktop:gap-4">
               {selectedRows &&
-                ((selectedRows.sent.length > 0 && status === "sent") ||
-                (selectedRows.unsent.length > 0 && status === "unsent") ? (
+                ((selectedRows.sent?.length > 0 && status === "sent") ||
+                (selectedRows.unsent?.length > 0 && status === "unsent") ? (
                   <div className="flex items-center gap-2 md:gap-4">
                     <div
                       className="border border-gray rounded-lg flex items-center gap-2 py-[10px] px-4 h-[40px] cursor-pointer"
@@ -619,7 +613,7 @@ export const ConsignmentDetail = () => {
               {isLoading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={columns.length}
+                    colSpan={columns?.length}
                     className="h-24 text-center"
                   >
                     <Loader2 className="w-6 h-6 animate-spin mx-auto" />
@@ -668,15 +662,17 @@ export const ConsignmentDetail = () => {
             </button>
             <span className="text-black text-sm">
               Page <span className="font-semibold">{currentPage}</span> of{" "}
-              <span className="font-semibold">{pagination?.totalPages}</span>
+              <span className="font-semibold">
+                {Math.ceil(box.length / perPage) || 1}
+              </span>
             </span>
             <button
               onClick={() =>
                 setCurrentPage((prev) =>
-                  Math.min(prev + 1, pagination?.totalPages)
+                  Math.min(prev + 1, Math.ceil(box.length / perPage))
                 )
               }
-              disabled={currentPage === pagination?.totalPages}
+              disabled={currentPage === Math.ceil(box.length / perPage)}
               className="px-[14px] py-2 rounded-lg disabled:opacity-50 shadow-shadow1 border border-gray text-black font-semibold text-sm"
             >
               Next

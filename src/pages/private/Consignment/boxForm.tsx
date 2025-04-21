@@ -3,7 +3,15 @@ import Button from "../../../components/common/button";
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Plus,
+  ScanLine,
+  Trash2,
+  X,
+} from "lucide-react";
 import Modal from "../../../components/common/modal";
 import {
   useAddProductApiMutation,
@@ -141,6 +149,15 @@ export const BoxForm = ({ closeDrawer }: { closeDrawer: any }) => {
     }
   };
 
+  const [scanOpen, setScanOpen] = useState(false);
+
+  const handleScanConfirmPopup = () => {
+    if (scanOpen) {
+      setScanOpen(false);
+    } else {
+      setScanOpen(true);
+    }
+  };
   return (
     <>
       <div className="bg-gray5 p-4 lg:p-6 border-b border-gray2">
@@ -430,6 +447,7 @@ export const BoxForm = ({ closeDrawer }: { closeDrawer: any }) => {
               text="Scan FSN"
               className="border-2 border-purple bg-purple text-white text-sm rounded-[8px] h-[40px] font-medium relative px-4 py-[10px] flex items-center gap-2 w-full"
               type="button"
+              onClick={() => setScanOpen(true)}
             />
           </div>
         </div>
@@ -497,6 +515,30 @@ export const BoxForm = ({ closeDrawer }: { closeDrawer: any }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {scanOpen && (
+        <Modal onClose={handleScanConfirmPopup} isOpen={true}>
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+            <div className="bg-white p-8 rounded-lg shadow-lg relative flex flex-col items-center">
+              <div
+                onClick={() => setScanOpen(false)}
+                className="absolute top-3 right-3 cursor-pointer"
+              >
+                <X className="w-6 h-6 text-purple" />
+              </div>
+              <div className="w-[76px] h-[76px] bg-lightPurple rounded-full p-5 flex items-center justify-center mb-6">
+                <ScanLine className="text-purple w-9 h-9" />
+              </div>
+              <h2 className="text-darkBlack text-lg md:text-xl desktop:text-2xl font-medium mb-3">
+                Scan QR on Box
+              </h2>
+              <p className="text-gray text-sm desktop:text-base font-medium text-center">
+                Scan SKU ID QR for adding Product
+              </p>
+            </div>
+          </div>
+        </Modal>
       )}
     </>
   );

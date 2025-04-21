@@ -52,6 +52,12 @@ const consignmentApi = mainApi.injectEndpoints({
         body: data,
       }),
     }),
+    getBoxConsignmentApi: builder.query<unknown, number>({
+      query: (id: number) => ({
+        url: `consignment/find-consignment-box/${id}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -62,4 +68,5 @@ export const {
   useDeleteConsignmentApiMutation,
   useGetSingleConsignmentApiMutation,
   useUpdateConsignmentApiMutation,
+  useGetBoxConsignmentApiQuery,
 } = consignmentApi;

@@ -45,7 +45,6 @@ export const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    // console.log(data);
     try {
       const response: any = await ApiUtils.authLogin(data);
       if (response.data.accessToken) {
