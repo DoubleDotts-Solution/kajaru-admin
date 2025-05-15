@@ -34,7 +34,6 @@ import {
 import {
   useDeleteConsignmentApiMutation,
   useGetBoxConsignmentApiQuery,
-  useGetSingleConsignmentApiMutation,
 } from "../../../store/slice/apiSlice/consignment";
 import { BoxForm } from "./boxForm";
 import { ViewBoxForm } from "./viewBoxForm";
@@ -52,28 +51,6 @@ export const ConsignmentDetail = () => {
 
   const pathParts = location.pathname.split("/");
   const id = pathParts[pathParts?.length - 1];
-  const [getSingleConsignment] = useGetSingleConsignmentApiMutation();
-  const [consignmentData, setConsignmentData] = useState<any | null>(null);
-
-  useEffect(() => {
-    if (!id) return;
-
-    const fetchData = async () => {
-      try {
-        const response: any = await getSingleConsignment(id).unwrap();
-
-        if (response.status === 200) {
-          setConsignmentData(response.data);
-        }
-      } catch (error: any) {
-        toast.error(error?.data?.message || "Something went wrong", {
-          position: "top-right",
-        });
-      }
-    };
-
-    fetchData();
-  }, [getSingleConsignment, id]);
 
   const handleDateChange = (start: Date | null, end: Date | null) => {
     setStartDate(start);
@@ -402,6 +379,7 @@ export const ConsignmentDetail = () => {
     navigate(`/consignment-details/${id}`);
     setOpenDrawerValue("");
   };
+
   return (
     <>
       <div className="py-6 md:py-8 px-4 md:px-6">
@@ -430,9 +408,9 @@ export const ConsignmentDetail = () => {
           <div className="p-4 md:p-5 desktop:p-6 border-b border-gray2">
             <div className="flex items-center justify-between gap-2 mb-3">
               <h2 className="text-darkBlack text-lg md:text-xl desktop:text-2xl font-medium">
-                {consignmentData?.consignment_number}
+                {boxData?.consignment_number}
               </h2>
-              {consignmentData?.status === "unsent" ? (
+              {boxData?.status === "unsent" ? (
                 <p className="text-xs md:text-sm bg-lightRed text-darkRed py-[2px] px-[10px] font-medium rounded-[16px] w-max">
                   Unsent
                 </p>
@@ -449,14 +427,14 @@ export const ConsignmentDetail = () => {
                     No. of Boxes:
                   </p>
                   <span className="text-darkBlack font-medium text-xs md:text-sm desktop:text-base">
-                    {consignmentData?.number_of_box}
+                    {boxData?.number_of_box}
                   </span>
                 </div>
                 <div className="border-l border-[#D1D4DA] h-[14px]"></div>
                 <div className="flex items-center gap-2">
                   <Calendar className="text-darkBlack h-3 w-3 md:w-5 md:h-5" />
                   <span className="text-darkBlack font-medium text-xs md:text-sm desktop:text-base">
-                    {formatTimestamp(consignmentData?.updatedAt)}
+                    {formatTimestamp(boxData?.updatedAt)}
                   </span>
                 </div>
               </div>
@@ -478,9 +456,8 @@ export const ConsignmentDetail = () => {
                 Tags:
               </span>
               <div className="flex flex-wrap gap-2">
-                {consignmentData?.tags
-                  .split(",")
-                  .map((tag: string, idx: number) => (
+                {boxData?.tags &&
+                  boxData?.tags.split(",").map((tag: string, idx: number) => (
                     <span
                       key={idx}
                       className="bg-gray6 text-sm text-black3 px-3 py-0.5 rounded-full"
@@ -494,9 +471,7 @@ export const ConsignmentDetail = () => {
               <Pencil
                 className="h-5 w-5 text-primary cursor-pointer"
                 onClick={() => {
-                  navigate(
-                    `/consignment?edit-consignment=${consignmentData?.id}`
-                  );
+                  navigate(`/consignment?edit-consignment=${boxData?.id}`);
                   setDrawerOpen(true);
                 }}
               />
@@ -504,7 +479,7 @@ export const ConsignmentDetail = () => {
               <Trash2
                 className="h-5 w-5 text-darkRed cursor-pointer"
                 onClick={() => {
-                  confirmDelete(consignmentData?.id);
+                  confirmDelete(boxData?.id);
                   setSelectedBy("consignment");
                 }}
               />

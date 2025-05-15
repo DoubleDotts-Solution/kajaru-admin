@@ -21,7 +21,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="relative">
+    <div className="relative" id="date_range_picker">
       <div
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-4 py-[9px] border border-gray bg-white rounded-md cursor-pointer ${className}`}

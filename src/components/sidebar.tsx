@@ -77,10 +77,17 @@ export const Sidebar = () => {
   };
 
   const handleConfirmPopup = () => {
+    const table = document.getElementById("table_div");
+    const datePicker = document.getElementById("date_range_picker");
+
     if (showConfirm) {
       setShowConfirm(false);
+      table?.classList.remove("table-hidden");
+      datePicker?.classList.remove("table-hidden");
     } else {
       setShowConfirm(true);
+      datePicker?.classList.add("table-hidden");
+      table?.classList.add("table-hidden");
     }
   };
 
@@ -168,13 +175,18 @@ export const Sidebar = () => {
 
       {showConfirm && (
         <Modal onClose={handleConfirmPopup} isOpen={true}>
-          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+          <div
+            className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50"
+            style={{
+              zIndex: 99999999,
+            }}
+          >
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <p className="text-lg font-bold">
                 Are you sure you want to log out?
               </p>
               <div className="flex justify-center mt-5 w-full gap-5 items-center">
-                <div onClick={() => setShowConfirm(false)}>
+                <div onClick={handleConfirmPopup}>
                   <Button
                     text="Cancel"
                     className="border border-gray2 text-black text-sm rounded-[8px] h-[40px] font-medium relative px-4 py-[10px] flex items-center gap-2"

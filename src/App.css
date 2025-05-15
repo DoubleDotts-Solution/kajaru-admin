@@ -12,3 +12,6 @@ input[type="number"] {
 .border-transparent {
   border-color: transparent !important;
 }
+.table-hidden {
+  z-index: -1;
+}

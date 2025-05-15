@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scan Box</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 50px;
+      }
+
+      .scan-btn {
+        background-color: purple;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .scan-btn svg {
+        margin-right: 8px;
+        width: 20px;
+        height: 20px;
+        fill: white;
+      }
+
+      video {
+        margin-top: 20px;
+        width: 100%;
+        max-width: 400px;
+        border: 2px solid #ccc;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="scan-btn" onclick="openCamera()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6z" />
+      </svg>
+      Scan Box
+    </button>
+
+    <video id="camera" autoplay playsinline></video>
+
+    <script>
+      //   async function openCamera() {
+      //     const video = document.getElementById("camera");
+      //     try {
+      //       const stream = await navigator.mediaDevices.getUserMedia({
+      //         video: true,
+      //       });
+      //       video.srcObject = stream;
+      //     } catch (err) {
+      //       alert("Unable to access the camera");
+      //       console.error(err);
+      //     }
+      //   }
+      async function openCamera() {
+        const video = document.getElementById("camera");
+        try {
+          // Try to get back camera exactly
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { exact: "environment" } },
+            audio: false,
+          });
+          video.srcObject = stream;
+        } catch (err) {
+          console.warn(
+            "Exact back camera not available, trying default environment camera",
+            err
+          );
+          try {
+            // Fallback: try without exact
+            const fallbackStream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: "environment" },
+              audio: false,
+            });
+            video.srcObject = fallbackStream;
+          } catch (finalErr) {
+            alert("Unable to access the camera");
+            console.error(finalErr);
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
