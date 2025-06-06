@@ -175,7 +175,7 @@ export const Delivery = () => {
           return (
             <>
               <div className="text-purple text-sm font-semibold w-max">
-                {row.original.consignment.consignment_number}
+                {row.original.consignment?.consignment_number}
               </div>
             </>
           );
