@@ -15,3 +15,16 @@ input[type="number"] {
 .table-hidden {
   z-index: -1;
 }
+
+#reader__scan_region img {
+  display: none !important;
+}
+#reader__scan_region {
+  min-height: auto !important;
+}
+#reader__scan_region video {
+  width: 295px !important;
+}
+#html5-qrcode-anchor-scan-type-change {
+  display: none !important;
+}

@@ -37,6 +37,7 @@ import {
 } from "../../../store/slice/apiSlice/consignment";
 import { BoxForm } from "./boxForm";
 import { ViewBoxForm } from "./viewBoxForm";
+import { Html5QrcodeScanner } from "html5-qrcode";
 
 export const ConsignmentDetail = () => {
   const navigate = useNavigate();
@@ -380,6 +381,74 @@ export const ConsignmentDetail = () => {
     setOpenDrawerValue("");
   };
 
+  const [scanResult, setScanResult] = useState<string | null>(null);
+  const [scanner, setScanner] = useState<Html5QrcodeScanner | null>(null);
+  const [isScannerReady, setIsScannerReady] = useState(false);
+
+  useEffect(() => {
+    if (showScanBox && !scanner) {
+      const qrScanner = new Html5QrcodeScanner(
+        "reader",
+        {
+          qrbox: {
+            width: 250,
+            height: 250,
+          },
+          fps: 5,
+        },
+        false
+      );
+
+      const success = (result: string) => {
+        console.log("QR Code scanned:", result);
+        setScanResult(result);
+        toast.success(`QR Code scanned: ${result}`, { position: "top-right" });
+
+        qrScanner
+          .clear()
+          .then(() => {
+            setScanner(null);
+            setShowScanBox(false);
+            setIsScannerReady(false);
+          })
+          .catch(console.error);
+      };
+
+      const error = (errorMessage: string) => {
+        if (
+          !errorMessage.includes("NotFoundException") &&
+          !errorMessage.includes("No MultiFormat Readers")
+        ) {
+          console.warn("QR Scanner error:", errorMessage);
+        }
+      };
+
+      qrScanner.render(success, error);
+      setScanner(qrScanner);
+
+      setTimeout(() => setIsScannerReady(true), 1000);
+    }
+
+    return () => {
+      if (scanner) {
+        scanner.clear().catch(console.error);
+        setScanner(null);
+        setIsScannerReady(false);
+      }
+    };
+  }, [showScanBox]);
+
+  useEffect(() => {
+    if (!showScanBox && scanner) {
+      scanner
+        .clear()
+        .then(() => {
+          setScanner(null);
+        })
+        .catch(console.error);
+    }
+  }, [showScanBox, scanner]);
+
   return (
     <>
       <div className="py-6 md:py-8 px-4 md:px-6">
@@ -696,9 +765,23 @@ export const ConsignmentDetail = () => {
         {showScanBox && (
           <Modal onClose={handleScanConfirmPopup} isOpen={true}>
             <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-              <div className="bg-white p-8 rounded-lg shadow-lg relative flex flex-col items-center">
+              <div className="bg-white p-4 md:p-8 rounded-lg shadow-lg relative flex flex-col items-center">
                 <div
-                  onClick={() => setShowScanBox(false)}
+                  onClick={() => {
+                    if (scanner) {
+                      scanner
+                        .clear()
+                        .then(() => {
+                          setScanner(null);
+                          setShowScanBox(false);
+                          setIsScannerReady(false);
+                        })
+                        .catch(console.error);
+                    } else {
+                      setShowScanBox(false);
+                      setIsScannerReady(false);
+                    }
+                  }}
                   className="absolute top-3 right-3 cursor-pointer"
                 >
                   <X className="text-purple" />
@@ -709,10 +792,30 @@ export const ConsignmentDetail = () => {
                 <h2 className="text-darkBlack text-lg md:text-xl desktop:text-2xl font-medium mb-3">
                   Scan QR on Box
                 </h2>
-                <p className="text-gray text-sm desktop:text-base font-medium text-center">
-                  Scan QR code that available on Box to <br /> create new box
-                  and then you can add <br /> SKU in Box
+                <p className="text-gray text-sm desktop:text-base font-medium text-center mb-4">
+                  {!isScannerReady
+                    ? "Initializing camera..."
+                    : "Point your camera at a QR code to scan it"}
                 </p>
+
+                <div id="reader" className="w-[295px]"></div>
+
+                {!isScannerReady && (
+                  <div className="mt-4 text-center">
+                    <div className="inline-flex items-center px-4 py-2 text-sm text-blue-600 bg-blue-100 rounded-lg">
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Setting up camera...
+                    </div>
+                  </div>
+                )}
+
+                {scanResult && (
+                  <div className="mt-4 p-4 bg-green-100 rounded-lg">
+                    <p className="text-green-800 font-medium">
+                      Scanned: {scanResult}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </Modal>

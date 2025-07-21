@@ -1,11 +1,12 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import Button from "../../../components/common/button";
 import toast from "react-hot-toast";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
   ChevronDown,
   ChevronUp,
+  Loader2,
   Pencil,
   Plus,
   ScanLine,
@@ -19,6 +20,7 @@ import {
   useEditProductApiMutation,
 } from "../../../store/slice/apiSlice/product";
 import { useGetBoxProductApiQuery } from "../../../store/slice/apiSlice/box";
+import { Html5QrcodeScanner } from "html5-qrcode";
 
 const skuOptions = [
   "POLO-M-8015-BROWN",
@@ -158,6 +160,75 @@ export const BoxForm = ({ closeDrawer }: { closeDrawer: any }) => {
       setScanOpen(true);
     }
   };
+
+  const [scanResult, setScanResult] = useState<string | null>(null);
+  const [scanner, setScanner] = useState<Html5QrcodeScanner | null>(null);
+  const [isScannerReady, setIsScannerReady] = useState(false);
+
+  useEffect(() => {
+    if (scanOpen && !scanner) {
+      const qrScanner = new Html5QrcodeScanner(
+        "reader",
+        {
+          qrbox: {
+            width: 250,
+            height: 250,
+          },
+          fps: 5,
+        },
+        false
+      );
+
+      const success = (result: string) => {
+        console.log("QR Code scanned:", result);
+        setScanResult(result);
+        toast.success(`QR Code scanned: ${result}`, { position: "top-right" });
+
+        qrScanner
+          .clear()
+          .then(() => {
+            setScanner(null);
+            setScanOpen(false);
+            setIsScannerReady(false);
+          })
+          .catch(console.error);
+      };
+
+      const error = (errorMessage: string) => {
+        if (
+          !errorMessage.includes("NotFoundException") &&
+          !errorMessage.includes("No MultiFormat Readers")
+        ) {
+          console.warn("QR Scanner error:", errorMessage);
+        }
+      };
+
+      qrScanner.render(success, error);
+      setScanner(qrScanner);
+
+      setTimeout(() => setIsScannerReady(true), 1000);
+    }
+
+    return () => {
+      if (scanner) {
+        scanner.clear().catch(console.error);
+        setScanner(null);
+        setIsScannerReady(false);
+      }
+    };
+  }, [scanOpen]);
+
+  useEffect(() => {
+    if (!scanOpen && scanner) {
+      scanner
+        .clear()
+        .then(() => {
+          setScanner(null);
+        })
+        .catch(console.error);
+    }
+  }, [scanOpen, scanner]);
+
   return (
     <>
       <div className="bg-gray5 p-4 lg:p-6 border-b border-gray2">
@@ -536,6 +607,25 @@ export const BoxForm = ({ closeDrawer }: { closeDrawer: any }) => {
               <p className="text-gray text-sm desktop:text-base font-medium text-center">
                 Scan SKU ID QR for adding Product
               </p>
+
+              <div id="reader" className="w-[295px]"></div>
+
+              {!isScannerReady && (
+                <div className="mt-4 text-center">
+                  <div className="inline-flex items-center px-4 py-2 text-sm text-blue-600 bg-blue-100 rounded-lg">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Setting up camera...
+                  </div>
+                </div>
+              )}
+
+              {scanResult && (
+                <div className="mt-4 p-4 bg-green-100 rounded-lg">
+                  <p className="text-green-800 font-medium">
+                    Scanned: {scanResult}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </Modal>
