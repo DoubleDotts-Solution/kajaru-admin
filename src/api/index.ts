@@ -38,8 +38,8 @@ api.interceptors.response.use(
           },
           {
             headers: {
-              Authorization: `Bearer ${sessionStorage.getItem(
-                "__kajaru_access_"
+              Authorization: `Bearer ${localStorage.getItem(
+                "__kajaru_refresh_"
               )}`,
             },
           }

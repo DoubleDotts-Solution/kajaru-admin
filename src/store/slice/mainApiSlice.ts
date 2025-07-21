@@ -23,7 +23,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionStorage.getItem("__kajaru_access_")}`,
+          Authorization: `Bearer ${localStorage.getItem("__kajaru_refresh_")}`,
         },
         body: JSON.stringify({
           refresh_token: refreshToken,
